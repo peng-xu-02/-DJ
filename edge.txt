@@ -1,0 +1,7 @@
+AB2
+AC3
+AD6
+BE3
+CD2
+EF2
+DF1
