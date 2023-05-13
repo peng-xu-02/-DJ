@@ -5,6 +5,7 @@
 #include<time.h>
 #include<vector>
 #include"ServerTCP.h"
+#include<string.h>
 using namespace std;
 #define WIN_x 600
 #define WIN_y 600
@@ -18,6 +19,7 @@ vector<char> arr[10][10]; //存放路径信息;
 
 route_table table[20];           //新路由表；
 route_table temp_table[20];     //旧路由表；
+
 
 void readfile(Graph* G)      //从文件中读取内容；
 {
@@ -322,157 +324,55 @@ void addtex(Graph& G) {
 
 }
 
-int r[3][4] = {
-	{30,20,130,60},
-	{170,20,280,60},
-	{300,20,360,60}
-};
-int button_judge(int x, int y)
-{
-	if (x > r[0][0] && x<r[0][2] && y>r[0][1] && y < r[0][3])  return 1;
-	if (x > r[1][0] && x<r[1][2] && y>r[1][1] && y < r[1][3])  return 2;
-	if (x > r[2][0] && x<r[2][2] && y>r[2][1] && y < r[2][3])  return 3;
-	return 0;
-}
-void meun()
-{
-	initgraph(WIN_x, WIN_y, 1);
-	int event = 0;
-	//outtextxy(200, 200, L"helloworld");
-	for (int i = 0; i < 256; i += 5) {
-		setbkcolor(RGB(i, i, i));
-		cleardevice();
-		Sleep(20);
-	}
-
-	RECT R1 = { r[0][0],r[0][1],r[0][2],r[0][3] };
-	RECT R2 = { r[1][0],r[1][1],r[1][2],r[1][3] };
-	RECT R3 = { r[2][0],r[2][1],r[2][2],r[2][3] };
-
-	LOGFONT f;
-	gettextstyle(&f);
-	_tcscpy(f.lfFaceName, _T("宋体"));
-	f.lfQuality = ANTIALIASED_QUALITY;
-	settextstyle(&f);
-	settextcolor(BLACK);
-	drawtext("键盘输入", &R1, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-	drawtext("文件读取", &R2, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-	drawtext("退出", &R3, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
-	setlinecolor(BLACK);
-	rectangle(r[0][0], r[0][1], r[0][2], r[0][3]);
-	rectangle(r[1][0], r[1][1], r[1][2], r[1][3]);
-	rectangle(r[2][0], r[2][1], r[2][2], r[2][3]);
-
-}
-
-void next()
-{
-	char c;
-	c = getchar();
-	system("cls");
-	exit(0);
-}
-
 
 int main()
 {
-	//meun();
-	//Graph G;
-	//Graph M;
-	//int event = 0;
-	//MOUSEMSG m;
-	//setrop2(R2_NOTXORPEN);
-	//while (true) {
-	//	m = GetMouseMsg();
-	//	switch (m.uMsg) {
-	//	case WM_MOUSEMOVE:
-	//		setrop2(R2_XORPEN);
-	//		setlinecolor(LIGHTCYAN);
-	//		setlinestyle(PS_SOLID, 3);
-	//		setfillcolor(WHITE);
-	//		if (button_judge(m.x, m.y) != 0) {
-	//			if (event != button_judge(m.x, m.y)) {
-	//				event = button_judge(m.x, m.y);
-	//				fillrectangle(r[event - 1][0], r[event - 1][1], r[event - 1][2], r[event - 1][3]);
-	//			}
-	//		}
-	//		else {
-	//			if (event != 0) {
-	//				fillrectangle(r[event - 1][0], r[event - 1][1], r[event - 1][2], r[event - 1][3]);
-	//				event = 0;
-	//			}
-	//		}
-	//		break;
-	//	case WM_LBUTTONDOWN:
-	//		setrop2(R2_XORPEN);
-	//		for (int i = 0; i < 10; i++) {
-	//			setlinecolor(RGB(25 * i, 25 * i, 25 * i));
-	//			circle(m.x, m.y, 2 * i);
-	//			Sleep(50);
-	//			circle(m.x, m.y, 2 * i);
-	//		}
-	//		switch (button_judge(m.x, m.y)) {
-	//		case 1:
-	//			closegraph();
-	//			CreatUDN(G);
-	//			init_route_table(&G);  //初始化所有路由表
+	printf("---------------------\n");
+	printf("     1.文件读取\n");
+	printf("     2.键盘输入\n");
+	printf("     3.客户端连接\n");
+	printf("     0.退出\n");
+	printf("---------------------\n");
+	while (true) {
+		Graph G = { 0 };
+		Graph M = { 0 };
+		Graph U = { 0 };
+		int num;
+		printf("请输入命令：\n");
+		scanf_s("%d", &num);
+		switch (num) {
+		case 1:
+			readfile(&G);
+			init_route_table(&G);  //初始化所有路由表；
+			Distance_vector_routing(&G);   //使用算法
+			print_route_table(&G);
+			break;
+
+		case 2:
+			CreatUDN(M);
+			init_route_table(&M);  //初始化所有路由表
 
 
-	//			Distance_vector_routing(&G);   //使用算法
+			Distance_vector_routing(&M);   //使用算法；
+			print_route_table(&M);
+			break;
 
+		case 3:
+			ServerTCP(&U);
+			break;
 
-	//			print_route_table(&G);
-	//			event = 0;
-	//			next();
-	//			break;
+		case 0:
 
+			exit(0);
+			break;
 
-			//case 2:
-			//	//closegraph();
-			//	readfile(&M);
-			//	init_route_table(&M);  //初始化所有路由表；
-			//	Distance_vector_routing(&M);   //使用算法
-			//	print_route_table(&M);
-			//	//print_route_way(&M);
-			//	event = 0;
-			//	next();
-			//	break;
+		default:
+			break;
 
+		}
 
-	//		case 3:
-	//			closegraph();
-	//			exit(0);
-	//		default:
-	//			FlushMouseMsgBuffer();
-	//			break;
-	//		}
-
-	//	}
-
-	//}
-
-
-
-	//Graph G;
-	//CreatUDN(G);
-	//init_route_table(&G);  //初始化所有路由表
-
-
-	//Distance_vector_routing(&G);   //使用算法；
-	//print_route_table(&G);
-	//addtex(G);
-	//init_route_table(&G);  //初始化所有路由表
-	//Distance_vector_routing(&G);
-	//print_route_table(&G);
-	Graph G;
-	ServerTCP(&G);
-
-	//Graph M;
-	//readfile(&M);
-	//init_route_table(&M);  //初始化所有路由表；
-	//Distance_vector_routing(&M);   //使用算法
-	//print_route_table(&M);
-
+		
+	}
 
 	return 0;
 }

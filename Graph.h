@@ -5,11 +5,6 @@ typedef struct Graph {
 	char vertex[20];   //顶点值；
 	int edg[20][20];    //顶点相连的边权值；
 
-	Graph() {
-		memset(edg, 0, sizeof(edg));
-		memset(vertex, 0, sizeof(vertex));
-	}
-
 }Graph;
 
 typedef struct route_node {               //路由节点；
