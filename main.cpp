@@ -11,17 +11,18 @@ using namespace std;
 #define WIN_y 600
 
 vector<char> arr[10][10]; //存放路径信息;
-
-
-
-
-
-
 route_table table[20];           //新路由表；
 route_table temp_table[20];     //旧路由表；
 
 
-void readfile(Graph* G)      //从文件中读取内容；
+void InitGraph(Graph* G) {
+	G->vNumber = 0;
+	memset(G->edg, 0, sizeof(G->edg));
+	memset(G->vertex, 0, sizeof(G->vertex));
+}
+
+
+void readfile(Graph *G)      //从文件中读取内容；
 {
 	FILE * file1,*file2,*file3;
 
@@ -75,7 +76,7 @@ void readfile(Graph* G)      //从文件中读取内容；
 
 
 
-void init_route_table(Graph* G)      //初始化路由表；
+void init_route_table(Graph *G)      //初始化路由表；
 {
 	for (int i = 0; i < G->vNumber; i++) {
 		table[i].route_name = G->vertex[i];
@@ -334,9 +335,12 @@ int main()
 	printf("     0.退出\n");
 	printf("---------------------\n");
 	while (true) {
-		Graph G = { 0 };
-		Graph M = { 0 };
-		Graph U = { 0 };
+		Graph G;
+		InitGraph(&G);
+		Graph M;
+		InitGraph(&M);
+		Graph U;
+		InitGraph(&U);
 		int num;
 		printf("请输入命令：\n");
 		scanf_s("%d", &num);
@@ -351,8 +355,6 @@ int main()
 		case 2:
 			CreatUDN(M);
 			init_route_table(&M);  //初始化所有路由表
-
-
 			Distance_vector_routing(&M);   //使用算法；
 			print_route_table(&M);
 			break;
