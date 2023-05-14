@@ -10,15 +10,21 @@ using namespace std;
 #define WIN_x 600
 #define WIN_y 600
 
-vector<char> arr[10][10]; //存放路径信息;
-route_table table[20];           //新路由表；
-route_table temp_table[20];     //旧路由表；
+//vector<char> arr[10][10]; //存放路径信息;
 
-
-void InitGraph(Graph* G) {
+void InitGraph(Graph* G) {       //初始化图
+	// 设置顶点数和边数为0
 	G->vNumber = 0;
-	memset(G->edg, 0, sizeof(G->edg));
-	memset(G->vertex, 0, sizeof(G->vertex));
+	// 设置顶点值为默认值
+	for (int i = 0; i < 20; i++) {
+		G->vertex[i] = '\0';
+	}
+	// 设置边权值为默认值
+	for (int i = 0; i < 20; i++) {
+		for (int j = 0; j < 20; j++) {
+			G->edg[i][j] = 0;
+		}
+	}
 }
 
 
@@ -76,15 +82,15 @@ void readfile(Graph *G)      //从文件中读取内容；
 
 
 
-void init_route_table(Graph *G)      //初始化路由表；
+void init_route_table(Graph *G,route_table *R)      //初始化路由表；
 {
 	for (int i = 0; i < G->vNumber; i++) {
-		table[i].route_name = G->vertex[i];
+		R[i].route_name = G->vertex[i];
 		for (int j = 0; j < G->vNumber; j++) {
 				
-					table[i].items[j].destinnation = G->vertex[j];
-					table[i].items[j].distance = G->edg[i][j];
-					table[i].items[j].out = G->vertex[j];
+			R[i].items[j].destinnation = G->vertex[j];
+			R[i].items[j].distance = G->edg[i][j];
+			R[i].items[j].out = G->vertex[j];
 				
 				
 			
@@ -104,7 +110,7 @@ void copy_table(Graph* G, route_table *old, route_table *update)      //拷贝路由
 
 
 
-void Distance_vector_routing(Graph* G) {
+void Distance_vector_routing(Graph* G,route_table *R,route_table *update) {
 	int count = 0;        //更新计数
 	bool is_change = true;        //路由表是否更新；
 
@@ -114,14 +120,13 @@ void Distance_vector_routing(Graph* G) {
 	{    
 		printf(" ");
 		for (int i = 0; i < G->vNumber; i++) {
-			printf(" %c", table[i].route_name);
+			printf(" %c", R[i].route_name);
 		}
 		printf("\n");
 			for (int i = 0; i < G->vNumber; i++) {
-				printf("%c ", table[i].route_name);
-				int k = 0;
+				printf("%c ", R[i].route_name);
 				for (int j = 0; j < G->vNumber; j++) {
-					printf("%d ", table[i].items[j].distance);
+					printf("%d ", R[i].items[j].distance);
 				}
 				printf("\n");
 			}
@@ -131,7 +136,7 @@ void Distance_vector_routing(Graph* G) {
 		is_change = false;
 		//先把上次的路由表全部保存起来
 		for (int c = 0; c < G->vNumber; c++) {
-			copy_table(G, &table[c], &temp_table[c]);
+			copy_table(G, &R[c], &update[c]);
 		}
 
 
@@ -142,10 +147,10 @@ void Distance_vector_routing(Graph* G) {
 			for (int q = 0; q < G->vNumber; q++) {
 				
 			
-				int curdis = temp_table[m].items[q].distance; //记录m->q最小距离
+				int curdis = update[m].items[q].distance; //记录m->q最小距离
 
 				if (m == q) { 
-					table[m].items[q].distance = 0;
+					R[m].items[q].distance = 0;
 
 				}
 				else {
@@ -154,16 +159,16 @@ void Distance_vector_routing(Graph* G) {
 					   for (int u = 0; u < G->vNumber; u++) {
 
 
-						   if (G->edg[m][u] != 0 && temp_table[u].items[q].distance != 0) {
+						   if (G->edg[m][u] != 0 && update[u].items[q].distance != 0) {
 
 
-							   if (G->edg[m][u] + temp_table[u].items[q].distance < curdis) {
+							   if (G->edg[m][u] + update[u].items[q].distance < curdis) {
 
 								   is_change = true;  //修改标记
 								  
-								   curdis = G->edg[m][u] + temp_table[u].items[q].distance;
-								   table[m].items[q].out = G->vertex[u];
-								   table[m].items[q].distance = curdis;
+								   curdis = G->edg[m][u] + update[u].items[q].distance;
+								   R[m].items[q].out = G->vertex[u];
+								   R[m].items[q].distance = curdis;
 
 
 
@@ -181,17 +186,16 @@ void Distance_vector_routing(Graph* G) {
 				   else {                 //算法有错；
 							//遍历与m相邻的结点
 
-					   int min;
 							for (int u = 0; u < G->vNumber; u++) {
 
-								if (G->edg[m][u] != 0 && temp_table[u].items[q].distance != 0 /*table[u].items[q].distance!=0*/) {
+								if (G->edg[m][u] != 0 && update[u].items[q].distance != 0) {
 
 									is_change = true;
 
-									int curdis = G->edg[m][u] + temp_table[u].items[q].distance;
-									table[m].items[q].destinnation = G->vertex[q]; //添加目的结点
-									table[m].items[q].out = G->vertex[u];
-									table[m].items[q].distance = curdis;//最短距离修改
+									int curdis = G->edg[m][u] + update[u].items[q].distance;
+									R[m].items[q].destinnation = G->vertex[q]; //添加目的结点
+									R[m].items[q].out = G->vertex[u];
+									R[m].items[q].distance = curdis;//最短距离修改
 								}
 							}
 							
@@ -207,24 +211,24 @@ void Distance_vector_routing(Graph* G) {
 	printf("更新次数为：%d\n", count);
 }
 
-void print_route_table(Graph *G) {
+void print_route_table(Graph *G,route_table *R,vector<char> arr[][10]) {
 
 	for (int i = 0; i < G->vNumber; i++) {
-		printf("%c的路由表：\n", table[i].route_name);
+		printf("%c的路由表：\n", R[i].route_name);
 		
 		printf("目的节点       相邻节点        最短路径         开销    \n");
 		for (int j = 0; j < G->vNumber; j++) {
-			printf("%c\t\t", table[i].items[j].destinnation);
-			printf("%c\t\t", table[i].items[j].out);
+			printf("%c\t\t", R[i].items[j].destinnation);
+			printf("%c\t\t", R[i].items[j].out);
 
-			arr[i][j].push_back(table[i].items[j].out);
+			arr[i][j].push_back(R[i].items[j].out);
 			if (i != j) {
 				for (int k = 0; k < G->vNumber; k++) {
-					if (table[i].items[j].out == G->vertex[k] && j != k) {
-						arr[i][j].push_back(table[k].items[j].out);
-						table[i].items[j].out = table[k].items[j].out;
+					if (R[i].items[j].out == G->vertex[k] && j != k) {
+						arr[i][j].push_back(R[k].items[j].out);
+						R[i].items[j].out = R[k].items[j].out;
 						k = 0;
-						if (table[i].items[j].out == table[i].items[j].destinnation)
+						if (R[i].items[j].out == R[i].items[j].destinnation)
 							break;
 					}
 				}
@@ -234,16 +238,16 @@ void print_route_table(Graph *G) {
 			int m = 0;
 			vector<char>::iterator it = arr[i][j].begin();
 			for (; it != arr[i][j].end(); it++, m++) {
-				table[i].items[j].pass[m] = *it;
+				R[i].items[j].pass[m] = *it;
 			}
 			for (int m = 0; m < arr[i][j].size(); m++) {
-				printf("%c", table[i].items[j].pass[m]);
+				printf("%c", R[i].items[j].pass[m]);
 			}
-			table[i].items[j].num = arr[i][j].size();
+			R[i].items[j].num = arr[i][j].size();
 			
 
 
-			printf("\t\t %d\n", table[i].items[j].distance);
+			printf("\t\t %d\n", R[i].items[j].distance);
 		}
 		printf("\n");
 	}
@@ -294,35 +298,20 @@ void CreatUDN(Graph& G)  //创建无向网
 	}
 }
 
-void addtex(Graph& G) {
-	int n;
-	printf("请输入要添加的节点个数：\n");
-	scanf_s("%d", &n);
-	G.vNumber += n;
-	printf("请输入要添加的节点：\n");
-	for (int i = 0; i < n; i++) {
-		scanf("%c", &G.vertex[G.vNumber - n + i]);
-	}
-	char c = getchar();
-	printf("请输入要添加的路径数：\n");
-	int m;
-	scanf_s("%d", &m);
-	char c1 = getchar();
-	int i, j;
-	for (int k = 0; k < m; k++) {
-		printf("请输入要填写的两个顶点的数据和两顶点间边的权值(总边数为：%d)：\n", m);
-		char v1, v2;
-		int w;
-		scanf("%c%c%d", &v1, &v2, &w);
-		i = LocateVex(G, v1);
-		j = LocateVex(G, v2);
-		G.edg[i][j] = w;
-		G.edg[j][i] = G.edg[i][j];
-		char c2 = getchar();
-	}
-	
-	printf("%d", G.vNumber);
 
+void InitRouteTable(route_table* R) {
+	// 设置路由表的名字为默认值
+	R->route_name = '\0';
+	// 设置路由表的每个项目为默认值
+	for (int i = 0; i < 20; i++) {
+		R->items[i].destinnation = '\0';
+		R->items[i].distance = 0;
+		R->items[i].out = -1;
+		for (int j = 0; j < 10; j++) {
+			R->items[i].pass[j] = '\0';
+		}
+		R->items[i].num = 0;
+	}
 }
 
 
@@ -334,33 +323,35 @@ int main()
 	printf("     3.客户端连接\n");
 	printf("     0.退出\n");
 	printf("---------------------\n");
+	Graph G;
 	while (true) {
-		Graph G;
+		memset(&G, 0, sizeof(G));
 		InitGraph(&G);
-		Graph M;
-		InitGraph(&M);
-		Graph U;
-		InitGraph(&U);
+		route_table R[20];
+		route_table update[20];
+		InitRouteTable(R);
+		InitRouteTable(update);
+		vector<char> arr[10][10];
 		int num;
 		printf("请输入命令：\n");
 		scanf_s("%d", &num);
 		switch (num) {
 		case 1:
 			readfile(&G);
-			init_route_table(&G);  //初始化所有路由表；
-			Distance_vector_routing(&G);   //使用算法
-			print_route_table(&G);
+			init_route_table(&G,R);  //初始化所有路由表；
+			Distance_vector_routing(&G,R,update);   //使用算法
+			print_route_table(&G,R,arr);
 			break;
 
 		case 2:
-			CreatUDN(M);
-			init_route_table(&M);  //初始化所有路由表
-			Distance_vector_routing(&M);   //使用算法；
-			print_route_table(&M);
+			CreatUDN(G);
+			init_route_table(&G,R);  //初始化所有路由表
+			Distance_vector_routing(&G,R,update);   //使用算法；
+			print_route_table(&G,R,arr);
 			break;
 
 		case 3:
-			ServerTCP(&U);
+			ServerTCP(&G,R,update,arr);
 			break;
 
 		case 0:

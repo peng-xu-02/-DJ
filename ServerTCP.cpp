@@ -11,14 +11,14 @@
 #define PORT 1234 // 服务器端口
 #define ROWS 3 // 二维数组的行数
 #define COLS 3 // 二维数组的列数
-extern void init_route_table(Graph* G);
+extern void init_route_table(Graph* G,route_table *R);
 extern void copy_table(Graph* G, route_table* old, route_table* update);
-extern void Distance_vector_routing(Graph* G);
-extern void print_route_table(Graph* G);
-extern route_table table[20];
+extern void Distance_vector_routing(Graph* G,route_table *R,route_table *update);
+extern void print_route_table(Graph* G,route_table *R,vector<char> arr[][10]);
 
 
-int ServerTCP(Graph *G) {
+
+int ServerTCP(Graph *G,route_table *R, route_table* update, vector<char> arr[][10]) {
     // 初始化socket库
     WSADATA wsaData;
     if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
@@ -79,13 +79,12 @@ int ServerTCP(Graph *G) {
     closesocket函数可以关闭一个socket描述符，释放其占用的资源。*/
 
     // 监听连接请求
-    if (listen(server_sock, 5) == SOCKET_ERROR) {
+    if (listen(server_sock, 3) == SOCKET_ERROR) {
         printf("listen failed: %d\n", WSAGetLastError());
         closesocket(server_sock);
         WSACleanup();
         exit(EXIT_FAILURE);
     }
-
     printf("Server is listening on port %d\n", PORT);
 
     while (1) {
@@ -135,7 +134,7 @@ int ServerTCP(Graph *G) {
         }
         printf("\n");
           G->vNumber = ROWS;
-          char seed[3] = { 'A','B','C' };
+          char seed[5] = { 'A','B','C','D','E'};
           for (int i = 0; i < ROWS; i++) {
               G->vertex[i] = seed[i];
             for (int j = 0; j < COLS; j++) {
@@ -144,15 +143,22 @@ int ServerTCP(Graph *G) {
         }
 
 
-        init_route_table(G);
-        Distance_vector_routing(G);
-        print_route_table(G);
+        init_route_table(G,R);
+        Distance_vector_routing(G,R,update);
+        print_route_table(G,R,arr);
 
-
-
-
-
-
+        route_table table[20];       //用来保存要发送的路由表信息；
+        for (int i = 0; i < G->vNumber; i++) {
+            table[i].route_name = R[i].route_name;
+            for (int j = 0; j < G->vNumber; j++) {
+                table[i].items[j].destinnation = R[i].items[j].destinnation;
+                table[i].items[j].distance = R[i].items[j].distance;
+                table[i].items[j].num = R[i].items[j].num;
+                for (int k = 0; k < R[i].items[j].num; k++) {
+                    table[i].items[j].pass[k] = R[i].items[j].pass[k];
+                }
+            }
+        }
         // 返回二维数组给客户端
         if (send(client_sock, (char*)recv_array, sizeof(recv_array), 0) == SOCKET_ERROR) {
             printf("send failed: %d\n", WSAGetLastError());
@@ -163,19 +169,6 @@ int ServerTCP(Graph *G) {
         }
 
         printf("Sent array back to client.\n");
-  /*
-        route_table retable[20] = { 0 };
-        for (int i = 0; i < G->vNumber; i++) {
-            retable[i].route_name = table[i].route_name;
-            for (int j = 0; j < G->vNumber; j++) {
-                retable[i].items[j].destinnation = table[i].items[j].destinnation;
-                retable[i].items[j].out = table[i].items[j].out;
-                retable[i].items[j].num = table[i].items[j].num;
-                for (int k = 0; k < table[i].items[j].num; k++) {
-                    retable[i].items[j].pass[k] = table[i].items[j].pass[k];
-                }
-            }
-        }*/
         if (send(client_sock, (char*)&table, sizeof(table), 0) == SOCKET_ERROR) {
             printf("send failed: %d\n", WSAGetLastError());
             closesocket(client_sock);
